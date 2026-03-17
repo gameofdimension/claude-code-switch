@@ -135,18 +135,6 @@ ccm config                      # Edit configuration file (~/.ccm_config)
 ccm help                        # Show help
 ```
 
-### Account Management (Claude Pro)
-
-Manage multiple Claude Pro accounts:
-
-```bash
-ccm save-account work           # Save current account as "work"
-ccm switch-account work         # Switch to "work" account
-ccm list-accounts               # List all saved accounts
-ccm delete-account work         # Delete "work" account
-ccm current-account             # Show current account info
-```
-
 ### Settings Management
 
 Write persistent settings for Claude Code:
@@ -265,8 +253,6 @@ The Python version is backward compatible with the Bash version:
 
 1. **Installation**: Use `uv tool install .` instead of `./install.sh`
 2. **Config file**: Same format, same location
-3. **Account storage**: Now uses proper keychain integration
-4. **Translations**: Preserved in `lang/` directory
 
 ## Troubleshooting
 
@@ -320,9 +306,6 @@ npm install -g @anthropic-ai/claude-code
 │                        Core Layer                           │
 │  ┌────────────┐  ┌────────────┐  ┌────────────────────┐    │
 │  │  Config    │  │  Providers │  │  Shell Exports     │    │
-│  └────────────┘  └────────────┘  └────────────────────┘    │
-│  ┌────────────┐  ┌────────────┐  ┌────────────────────┐    │
-│  │  Keychain  │  │  Accounts  │  │  Translations      │    │
 │  └────────────┘  └────────────┘  └────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                               │

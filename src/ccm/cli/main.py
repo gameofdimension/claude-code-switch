@@ -1,6 +1,6 @@
 """Main CLI entry point for CCM."""
 
-import sys
+import os
 from typing import Optional
 
 import typer
@@ -10,12 +10,6 @@ from rich.table import Table
 
 from ccm.core.config import Config, create_default_config, is_effectively_set, load_config
 from ccm.core.exports import ShellExportGenerator
-from ccm.core.providers import (
-    OPENROUTER_PROVIDERS,
-    get_openrouter_provider,
-    get_provider,
-    normalize_region,
-)
 
 app = typer.Typer(
     name="ccm",
@@ -35,11 +29,6 @@ def _get_config() -> Config:
 def _get_generator(config: Config | None = None) -> ShellExportGenerator:
     """Get export generator."""
     return ShellExportGenerator(config)
-
-
-def _is_eval_command() -> bool:
-    """Check if we're being run for eval (stdout will be captured)."""
-    return not sys.stdout.isatty()
 
 
 @app.callback(invoke_without_command=True)
@@ -145,22 +134,6 @@ for provider_name in ["deepseek", "ds", "kimi", "kimi2", "kimi-cn", "glm", "glm5
     app.command(provider_name)(create_provider_command(provider_name))
 
 
-# StepFun provider (separate command for clarity)
-@app.command("stepfun")
-def stepfun_cmd():
-    """Switch to StepFun provider."""
-    config = _get_config()
-    generator = _get_generator(config)
-
-    exports, success = generator.generate_for_provider("stepfun")
-
-    if success:
-        print(exports)
-    else:
-        console.print(f"[red]❌ {exports}[/red]")
-        raise typer.Exit(1)
-
-
 @app.command("open")
 def open_cmd(
     provider: str = typer.Argument(..., help="Provider to use via OpenRouter"),
@@ -209,8 +182,6 @@ def show_status(config: Config):
         ("OPENROUTER_API_KEY", "OPENROUTER_API_KEY"),
     ]
 
-    import os
-
     for var_name, config_key in env_vars:
         value = os.environ.get(var_name)
         if config_key:
@@ -233,8 +204,6 @@ def show_status(config: Config):
     console.print()
 
     # Config file info
-    import os
-
     config_path = os.path.expanduser("~/.ccm_config")
     if os.path.exists(config_path):
         console.print(f"[blue]Configuration file path:[/blue] {config_path}")
@@ -256,7 +225,6 @@ def mask_token(token: str | None) -> str:
 @app.command("config")
 def config_cmd():
     """Edit configuration file."""
-    import os
     import subprocess
 
     config_path = os.path.expanduser("~/.ccm_config")
@@ -278,7 +246,7 @@ def config_cmd():
         ("nano", "nano"),
     ]
 
-    for editor, name in editors:
+    for editor, _name in editors:
         if editor:
             try:
                 console.print("[blue]Opening configuration file for editing...[/blue]")
@@ -299,8 +267,6 @@ def project_cmd(
 ):
     """Write project-level settings to .claude/settings.local.json."""
     from ccm.settings.project import (
-        get_project_settings_path,
-        is_ccm_managed,
         reset_project_settings,
         show_project_settings,
         write_project_settings,
@@ -327,8 +293,6 @@ def user_cmd(
 ):
     """Write user-level settings to ~/.claude/settings.json."""
     from ccm.settings.user import (
-        get_user_settings_path,
-        is_ccm_managed,
         reset_user_settings,
         show_user_settings,
         write_user_settings,

@@ -9,76 +9,42 @@ Switch Claude Code between AI providers with one command.
 ## Quick Start
 
 ```bash
-# 1. Install from source
+# 1. Install
 git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 
-# 2. Configure your API keys
+# 2. Configure API keys
 ccm config
 
 # 3. Switch and use
-ccm glm global             # switch to GLM (sets env vars in current shell)
-ccc glm global             # switch + launch Claude Code (one command)
-
-# Advanced: User-level settings (highest priority, overrides everything)
-ccm user glm global        # Set GLM as default for all projects
-ccm user reset             # Restore environment variable control
-
-# Advanced: Project-only override
-ccm project glm china      # GLM for this project only
-
+ccm glm global        # switch to GLM (sets env vars)
+ccc glm global        # switch + launch Claude Code
 ```
-
-## 🆕 Python Version (v3.0)
-
-CCM has been migrated to Python for better maintainability, testing, and cross-platform support.
-
-### Install
-
-```bash
-# From source
-git clone https://github.com/gameofdimension/claude-code-switch.git
-cd claude-code-switch
-uv tool install .
-```
-
-### Python Version Features
-
-- Modern CLI with Typer/Rich
-- Type-safe with Pydantic
-- 62 unit & integration tests
-- Project & user-level settings
-
-See [Python Version Guide](docs/PYTHON_VERSION.md) for full documentation.
 
 ---
 
 ## Installation
 
-### From Source
 ```bash
 git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 ```
 
-### Install Modes
+### Shell Integration (Optional)
 
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **User** (default) | `./install.sh` | Personal use, available everywhere |
-| **System** | `./install.sh --system` | Shared machine, all users |
-| **Project** | `./install.sh --project` | Project-specific, isolated setup |
+For automatic env var handling, run the installer:
 
-### Install Options
 ```bash
-./install.sh --no-rc           # Skip shell rc injection
-./install.sh --cleanup-legacy  # Remove old installation
-./install.sh --help            # Show all options
+./install.sh              # User-level (default)
+./install.sh --system     # System-level
+./install.sh --project    # Project-only
+./install.sh --no-rc      # Skip shell rc injection
 ```
 
 ### Uninstall
+
 ```bash
 ./uninstall.sh
 ```
@@ -88,34 +54,37 @@ uv tool install .
 ## First-Time Setup
 
 ### 1. Configure API Keys
+
 ```bash
 ccm config
 ```
 
-This opens `~/.ccm_config` in your editor. Add your API keys:
+This opens `~/.ccm_config`. Add your API keys:
 
 ```bash
-# Required for each provider you want to use
 DEEPSEEK_API_KEY=sk-...
 KIMI_API_KEY=...
 GLM_API_KEY=...
 QWEN_API_KEY=...
 MINIMAX_API_KEY=...
 ARK_API_KEY=...           # For Doubao/Seed
+STEPFUN_API_KEY=...       # For StepFun
 OPENROUTER_API_KEY=...    # For OpenRouter
-CLAUDE_API_KEY=...        # Optional, for Claude API (vs subscription)
+CLAUDE_API_KEY=...        # Optional, for Claude API
 ```
 
 ### 2. Verify Setup
+
 ```bash
-ccm status    # Check current configuration
+ccm status
 ```
 
 ---
 
 ## Basic Usage
 
-### Switch Provider (in current shell)
+### Switch Provider (sets env vars in current shell)
+
 ```bash
 ccm glm global        # GLM global (default)
 ccm glm china         # GLM China
@@ -124,39 +93,30 @@ ccm kimi global       # Kimi global
 ccm kimi china        # Kimi China
 ccm qwen global       # Qwen global
 ccm minimax           # MiniMax
+ccm stepfun           # StepFun
 ccm seed              # Doubao/Seed
 ccm claude            # Claude official
 ```
 
 ### Switch + Launch Claude Code
+
 ```bash
-ccc glm global        # Switch to GLM global, then launch
-ccc glm china         # Switch to GLM China, then launch
+ccc glm global        # Switch to GLM, then launch
 ccc open glm          # Via OpenRouter
 ```
 
-### Check Status
-```bash
-ccm status             # Show current model and API key status
-```
+### Other Commands
 
-### Update Config
-When model IDs change in new versions, update your config:
 ```bash
-ccm update-config      # Update outdated model IDs to latest defaults
-```
-
-### Get Help
-```bash
-ccm help               # Show all commands
-ccc                    # Show ccc usage (no args)
+ccm status            # Show current configuration
+ccm help              # Show all commands
 ```
 
 ---
 
 ## Providers Reference
 
-### Direct Providers (API Key Required)
+### Direct Providers
 
 | Provider | Command | Region | Base URL |
 |----------|---------|--------|----------|
@@ -169,6 +129,7 @@ ccc                    # Show ccc usage (no args)
 | | | china | `coding.dashscope.aliyuncs.com/apps/anthropic` |
 | MiniMax | `ccm minimax [global\|china]` | global (default) | `api.minimax.io/anthropic` |
 | | | china | `api.minimaxi.com/anthropic` |
+| StepFun | `ccm stepfun` | - | `api.stepfun.ai/v1/anthropic` |
 | Seed/Doubao | `ccm seed [variant]` | - | `ark.cn-beijing.volces.com/api/coding` |
 | Claude | `ccm claude` | - | `api.anthropic.com` |
 
@@ -177,6 +138,7 @@ ccc                    # Show ccc usage (no args)
 > **Doubao Coding Plan**: [volcengine.com](https://volcengine.com/L/rLv5d5OWXgg/) (Invite code: `ZP5PZMEY`)
 
 ### Seed Variants
+
 ```bash
 ccm seed              # ark-code-latest (default)
 ccm seed doubao       # doubao-seed-code
@@ -186,8 +148,8 @@ ccm seed kimi         # kimi-k2.5
 ```
 
 ### OpenRouter
+
 ```bash
-ccm open              # Show help
 ccm open claude       # Claude via OpenRouter
 ccm open glm          # GLM via OpenRouter
 ccm open kimi         # Kimi via OpenRouter
@@ -195,83 +157,68 @@ ccm open deepseek     # DeepSeek via OpenRouter
 ccm open qwen         # Qwen via OpenRouter
 ccm open minimax      # MiniMax via OpenRouter
 ccm open stepfun      # StepFun via OpenRouter
-ccm open sf-free      # StepFun free tier
 ```
 
-**Available providers:** `claude`, `glm`, `kimi`, `deepseek`, `qwen`, `minimax`, `stepfun`
-
-**Free tier:** `stepfun-free` or `sf-free` for StepFun's free model
+**Available:** `claude`, `glm`, `kimi`, `deepseek`, `qwen`, `minimax`, `stepfun`
 
 ---
 
 ## Advanced Features
 
 ### User-Level Settings (Highest Priority)
-Write settings directly to `~/.claude/settings.json`. This overrides everything including environment variables and is useful when you have other tools (like Quotio) that also modify this file.
+
+Write to `~/.claude/settings.json`. Overrides everything.
 
 ```bash
-# Set provider at user level
-ccm user glm global      # GLM global for all projects
-ccm user glm china       # GLM China for all projects
-ccm user deepseek        # DeepSeek for all projects
-ccm user claude          # Claude official for all projects
-
-# Reset to environment variable control
-ccm user reset           # Remove ccm settings, use env vars instead
+ccm user glm global      # GLM for all projects
+ccm user reset           # Restore env var control
 ```
 
 **When to use:**
-- You have Quotio or another proxy that sets `~/.claude/settings.json`
-- You want a persistent default that survives shell restarts
-- Environment variables are being overridden by something else
+- Other tools modify `~/.claude/settings.json`
+- You want persistent defaults across shell restarts
 
 ### Project-Only Override
-Override settings for a specific project (keeps global settings intact):
+
+Override settings for a specific project:
 
 ```bash
-# In your project directory
-ccm project glm global    # Use GLM for this project only
-ccm project glm china     # Use GLM China for this project
-ccm project reset         # Remove project override
+ccm project glm global   # GLM for this project only
+ccm project reset        # Remove project override
 ```
 
-This creates/removes `.claude/settings.local.json` in the current project.
+Creates `.claude/settings.local.json` in the project.
 
 ---
 
 ## Configuration
 
 ### Priority Order (highest to lowest)
-1. `~/.claude/settings.json` (env section) - User-level settings
-2. `.claude/settings.local.json` - Project-level settings
-3. `~/.ccm_config` file - **Always reloads on each ccm command**
-4. Environment variables (only used if config value is a placeholder)
 
-### Config File Location
-```
-~/.ccm_config
-```
+1. `~/.claude/settings.json` - User-level settings
+2. `.claude/settings.local.json` - Project-level settings
+3. `~/.ccm_config` - Config file (reloads on each command)
+4. Environment variables
 
 ### Full Config Example
+
 ```bash
-# API Keys (required for each provider)
+# API Keys
 DEEPSEEK_API_KEY=sk-...
 KIMI_API_KEY=...
 GLM_API_KEY=...
 QWEN_API_KEY=...
 MINIMAX_API_KEY=...
 ARK_API_KEY=...
+STEPFUN_API_KEY=...
 OPENROUTER_API_KEY=...
 CLAUDE_API_KEY=...
 
-# Model ID Overrides (optional)
+# Model overrides (optional)
 DEEPSEEK_MODEL=deepseek-chat
 KIMI_MODEL=kimi-k2.5
-KIMI_CN_MODEL=kimi-k2.5
-QWEN_MODEL=qwen3-max-2026-01-23
 GLM_MODEL=glm-5
 MINIMAX_MODEL=MiniMax-M2.5
-SEED_MODEL=ark-code-latest
 CLAUDE_MODEL=claude-sonnet-4-5-20250929
 OPUS_MODEL=claude-opus-4-6
 HAIKU_MODEL=claude-haiku-4-5-20251001
@@ -279,51 +226,33 @@ HAIKU_MODEL=claude-haiku-4-5-20251001
 
 ---
 
-## Without Shell Function (Advanced)
+## Without Shell Function
 
-If you installed with `--no-rc` or call `ccm` binary directly, use eval to apply env vars:
+If using `--no-rc` or calling binary directly:
 
 ```bash
-# Direct binary call requires eval
 eval "$(ccm glm global)"
-
-# Or run from source without installing
-uv run ccm glm china
-uv run ccc glm china     # Switch + launch
 ```
-
-> **Note:** After normal installation (`./install.sh`), the shell function handles this automatically. Just run `ccm glm global` directly.
 
 ---
 
 ## Notes
 
-- **7 env vars exported per provider**: `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`
-- **Claude official**: Uses your Claude Code subscription by default, or `CLAUDE_API_KEY` if set
+- **7 env vars exported**: `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`, `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`
+- **Claude official**: Uses subscription by default, or `CLAUDE_API_KEY` if set
 - **OpenRouter**: Requires explicit `ccm open <provider>` command
-- **Project override**: Only affects the current project via `.claude/settings.local.json`
 
 ---
 
-## Contributing
+## Development
 
-Contributions are welcome! Here's how you can help:
-
-### Report Issues
-Found a bug or have a feature request? Please open an issue.
-
-### Submit Code
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
-### Development
 ```bash
 git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
-uv run ccm --help    # Test locally without installing
+uv sync --dev
+
+uv run ccm --help         # Test locally
+uv run pytest tests/ -v   # Run tests
 ```
 
 ---
@@ -331,9 +260,3 @@ uv run ccm --help    # Test locally without installing
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgments
-
-This tool is inspired by the need to easily switch between AI providers while using Claude Code. Thanks to all contributors and the open-source community.

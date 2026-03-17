@@ -176,8 +176,7 @@ class TestExportConfig:
             sonnet_model="sonnet",
             opus_model="opus",
             haiku_model="haiku",
-            extra_env={"FOO": "bar"},
         )
         assert config.base_url == "https://test.com"
         assert config.model == "test-model"
-        assert config.extra_env == {"FOO": "bar"}
+        assert config.sonnet_model == "sonnet"

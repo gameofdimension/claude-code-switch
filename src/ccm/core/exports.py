@@ -4,7 +4,6 @@ This module generates shell-compatible export statements that can be
 eval'd by the parent shell to set environment variables.
 """
 
-import os
 from dataclasses import dataclass
 
 from ccm.core.config import Config, load_config
@@ -27,8 +26,6 @@ class ExportConfig:
     sonnet_model: str | None = None
     opus_model: str | None = None
     haiku_model: str | None = None
-    # Extra environment variables
-    extra_env: dict[str, str] | None = None
     # Whether to unset API_KEY (for official Claude)
     unset_api_key: bool = False
 

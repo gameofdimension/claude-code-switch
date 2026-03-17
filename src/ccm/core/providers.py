@@ -32,8 +32,6 @@ class ProviderConfig:
     regions: dict[str, RegionConfig] = field(default_factory=dict)
     # For providers with variants (like seed)
     variants: dict[str, str] = field(default_factory=dict)
-    # Additional environment variables to set
-    extra_env: dict[str, str] = field(default_factory=dict)
     # Description for help text
     description: str = ""
 
@@ -186,10 +184,6 @@ PROVIDERS: dict[str, ProviderConfig] = {
         auth_token_var="CLAUDE_API_KEY",  # Optional, uses Pro subscription if not set
         model_default="claude-sonnet-4-5-20250929",
         model_env="CLAUDE_MODEL",
-        extra_env={
-            "OPUS_MODEL": "claude-opus-4-6",
-            "HAIKU_MODEL": "claude-haiku-4-5-20251001",
-        },
         description="Claude (Official Anthropic)",
     ),
 }
