@@ -264,11 +264,10 @@ HAIKU_MODEL=claude-haiku-4-5-20251001
 ```bash
 # 切换模型（将环境变量应用到当前 shell）
 eval "$(ccm glm global)"
-eval "$(./ccm.sh glm china)"
 
-# 或直接使用包装脚本
-./ccm glm global         # 仅输出 export 语句
-./ccc glm china          # 切换 + 启动
+# 或从源码运行
+uv run ccm glm china
+uv run ccc glm china     # 切换 + 启动
 ```
 
 ---
@@ -300,7 +299,7 @@ eval "$(./ccm.sh glm china)"
 ```bash
 git clone https://github.com/foreveryh/claude-code-switch.git
 cd claude-code-switch
-./ccm.sh help    # 本地测试，无需安装
+uv run ccm --help    # 本地测试，无需安装
 ```
 
 ---

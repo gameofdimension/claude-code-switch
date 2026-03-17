@@ -299,11 +299,10 @@ If you installed with `--no-rc` or want to use from cloned repo:
 ```bash
 # Switch model (apply env vars to current shell)
 eval "$(ccm glm global)"
-eval "$(./ccm.sh glm china)"
 
-# Or use the wrapper scripts directly
-./ccm glm global         # Just prints exports
-./ccc glm china          # Switch + launch
+# Or run from source
+uv run ccm glm china
+uv run ccc glm china     # Switch + launch
 ```
 
 ---
@@ -335,7 +334,7 @@ Found a bug or have a feature request? [Open an issue](https://github.com/foreve
 ```bash
 git clone https://github.com/foreveryh/claude-code-switch.git
 cd claude-code-switch
-./ccm.sh help    # Test locally without installing
+uv run ccm --help    # Test locally without installing
 ```
 
 ---
