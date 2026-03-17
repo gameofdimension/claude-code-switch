@@ -37,7 +37,7 @@
    ```bash
    # 重新加载 shell 配置
    source ~/.zshrc
-   
+
    # 使用 ccc 启动（会自动设置环境变量）
    ccc deepseek
    ```
@@ -86,79 +86,63 @@ mv ~/.claude-code-router.disabled ~/.claude-code-router
 
 ```bash
 # 错误示例 1：新增的命令不存在
-ccm h
-(eval):1: bad pattern: ^[[0
-zsh: parse error near `:1:'
+ccm: unknown command: xxx
 
 # 错误示例 2：新功能无法使用
-ccm open kimi
-ccm: unknown option: open
-
-# 错误示例 3：旧版本行为
-ccm status  # 显示的是旧配置，没有新添加的模型
+ccm: error: unrecognized arguments: xxx
 ```
 
 ### 原因分析
 
-**重要**：`ccm` shell 函数使用的是**已安装的脚本**（位于 `~/.local/share/ccm/ccm.sh`），而不是您工作目录中修改的开发版本。
+`ccm` 使用的是**已安装的 Python 包**，而不是您工作目录中的开发版本。
 
 当您：
-1. ✏️ 修改了 `ccm.sh` 文件
-2. ❌ 但忘记重新安装
-3. 🔍 运行 `ccm` 命令
+1. 修改了源代码
+2. 但忘记重新安装
+3. 运行 `ccm` 命令
 
 结果：您仍在使用**旧版本**的代码，新功能完全不会生效。
 
 ### 解决方案
 
-#### ✅ 标准开发流程（每次修改代码后必做）
+#### 标准开发流程（每次修改代码后必做）
 
 ```bash
 # 1. 修改代码后，重新安装
-./install.sh
+uv tool install . --force
 
-# 2. 重新加载 shell 配置
-source ~/.zshrc  # 或 source ~/.bashrc
+# 或者使用 pip
+pip install -e . --force-reinstall
 
-# 3. 验证更新
-ccm status      # 检查版本是否更新
-ccm help        # 确认新命令出现在帮助中
+# 2. 验证更新
+ccm --version    # 检查版本是否更新
+ccm --help       # 确认新命令出现在帮助中
 ```
 
-#### 🔍 验证是否需要重新安装
+#### 验证当前版本
 
 ```bash
-# 检查已安装版本的位置
+# 检查 ccm 的安装位置
 type ccm
-# 输出：ccm is a shell function from /Users/xxx/.zshrc
 
-# 查看已安装脚本的修改时间
-ls -lh ~/.local/share/ccm/ccm.sh
-
-# 对比工作目录版本
-ls -lh ccm.sh
-
-# 如果时间不匹配，说明需要重新安装
+# 查看版本
+ccm --version
 ```
 
-#### 🎯 开发者工作流程速查
+#### 开发者工作流程速查
 
 ```bash
 # 开发循环
-1. vim ccm.sh              # 编辑代码
-2. ./install.sh            # 安装更新
-3. source ~/.zshrc         # 重载配置  
-4. ccm <test-command>      # 测试功能
-5. 如有问题，回到步骤 1
+1. vim src/ccm/xxx.py    # 编辑代码
+2. uv tool install . --force  # 安装更新
+3. ccm <test-command>    # 测试功能
+4. 如有问题，回到步骤 1
 ```
 
 ### 特别提醒
 
-⚠️ **常见错误模式**：
-- ❌ 修改代码 → 直接运行 `ccm` → 疑惑为什么没生效
-- ✅ 修改代码 → `./install.sh` → `source ~/.zshrc` → 运行 `ccm`
-
-💡 **记忆技巧**：把 `./install.sh && source ~/.zshrc` 作为一个固定操作，每次改代码后都执行。
+- 修改代码后必须重新安装才能生效
+- 使用 `uv run ccm` 可以直接运行开发版本（无需安装）
 
 ---
 
@@ -191,13 +175,13 @@ ccm deepseek
 claude
 ```
 
-⚠️ **注意**：不要先启动 Claude Code，然后再切换环境变量，这样不会生效。
+**注意**：不要先启动 Claude Code，然后再切换环境变量，这样不会生效。
 
 ---
 
 ## 常见警告及解决方法
 
-### ⚠️ Auth conflict 警告
+### Auth conflict 警告
 
 ```
 ⚠ Auth conflict: Both a token (ANTHROPIC_AUTH_TOKEN) and an API key (/login managed key) are set.
@@ -215,7 +199,7 @@ claude /logout
 ccc deepseek
 ```
 
-### ❌ Model not found 错误
+### Model not found 错误
 
 **可能原因**：
 - 模型名称拼写错误
@@ -224,7 +208,7 @@ ccc deepseek
 **解决**：
 ```bash
 # 查看支持的模型
-ccm help
+ccm --help
 
 # 验证配置
 ccm status
@@ -239,7 +223,7 @@ ccm config
 
 在报告问题前，请逐一检查：
 
-- [ ] 已安装最新版本：`./install.sh`
+- [ ] 已安装最新版本：`uv tool install . --force`
 - [ ] 已重新加载 shell：`source ~/.zshrc`
 - [ ] 已执行 `claude /logout` 清除认证冲突
 - [ ] 配置文件正确：`ccm config` 检查 API keys
@@ -257,8 +241,6 @@ ccm config
 
 ```bash
 $ ccc deepseek
-🔄 Switching to deepseek...
-✅ Environment configured for: DeepSeek
 
 🚀 Launching Claude Code...
    Model: deepseek-chat
@@ -274,9 +256,9 @@ $ ccc deepseek
 ```
 
 **关键点**：
-- ✅ 没有认证冲突警告
-- ✅ Base URL 显示正确
-- ✅ 可以直接开始对话
+- 没有认证冲突警告
+- Base URL 显示正确
+- 可以直接开始对话
 
 ---
 
@@ -303,7 +285,7 @@ ccc deepseek
 
 2. **CCM 版本**：
    ```bash
-   head -5 ccm.sh  # 查看版本注释
+   ccm --version
    ```
 
 3. **配置状态**：
