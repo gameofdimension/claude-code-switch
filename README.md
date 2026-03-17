@@ -10,7 +10,7 @@ Switch Claude Code between AI providers with one command.
 
 ```bash
 # 1. Install from source
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 
@@ -38,7 +38,7 @@ CCM has been migrated to Python for better maintainability, testing, and cross-p
 
 ```bash
 # From source
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 ```
@@ -58,7 +58,7 @@ See [Python Version Guide](docs/PYTHON_VERSION.md) for full documentation.
 
 ### From Source
 ```bash
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 ```
@@ -319,7 +319,7 @@ Found a bug or have a feature request? Please open an issue.
 
 ### Development
 ```bash
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv run ccm --help    # Test locally without installing
 ```

@@ -73,7 +73,7 @@ OpenRouter exports set:
 ### Install (Python version)
 ```bash
 # From source
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 ```

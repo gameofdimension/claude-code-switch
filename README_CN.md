@@ -10,7 +10,7 @@
 
 ```bash
 # 1. 从源码安装
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 
@@ -35,7 +35,7 @@ ccm project glm china    # 仅此项目使用 GLM
 
 ### 从源码安装
 ```bash
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv tool install .
 ```
@@ -287,7 +287,7 @@ uv run ccc glm china     # 切换 + 启动
 
 ### 开发
 ```bash
-git clone <repo-url>
+git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
 uv run ccm --help    # 本地测试，无需安装
 ```
