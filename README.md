@@ -18,8 +18,8 @@ uv tool install .
 ccm config
 
 # 3. Switch and use
-eval "$(ccm glm)"          # switch to GLM (eval mode)
-ccc glm global             # switch + launch Claude Code
+ccm glm global             # switch to GLM (sets env vars in current shell)
+ccc glm global             # switch + launch Claude Code (one command)
 
 # Advanced: User-level settings (highest priority, overrides everything)
 ccm user glm global        # Set GLM as default for all projects
@@ -279,18 +279,20 @@ HAIKU_MODEL=claude-haiku-4-5-20251001
 
 ---
 
-## Without RC Injection
+## Without Shell Function (Advanced)
 
-If you installed with `--no-rc` or want to use from cloned repo:
+If you installed with `--no-rc` or call `ccm` binary directly, use eval to apply env vars:
 
 ```bash
-# Switch model (apply env vars to current shell)
+# Direct binary call requires eval
 eval "$(ccm glm global)"
 
-# Or run from source
+# Or run from source without installing
 uv run ccm glm china
 uv run ccc glm china     # Switch + launch
 ```
+
+> **Note:** After normal installation (`./install.sh`), the shell function handles this automatically. Just run `ccm glm global` directly.
 
 ---
 

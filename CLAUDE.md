@@ -80,9 +80,11 @@ uv tool install .
 
 ### Switch in current shell
 ```bash
-eval "$(ccm deepseek)"
-eval "$(ccm kimi china)"
+ccm deepseek           # switch to DeepSeek (sets env vars)
+ccm kimi china         # switch to Kimi China
 ```
+
+> Note: If calling ccm binary directly (without shell function), use `eval "$(ccm deepseek)"`
 
 ### Launch Claude Code
 ```bash

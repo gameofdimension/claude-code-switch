@@ -247,18 +247,20 @@ HAIKU_MODEL=claude-haiku-4-5-20251001
 
 ---
 
-## 不使用 RC 注入
+## 不使用 Shell 函数（高级）
 
-如果使用 `--no-rc` 安装或直接从仓库运行：
+如果使用 `--no-rc` 安装或直接调用 ccm 二进制文件，需要使用 eval 来应用环境变量：
 
 ```bash
-# 切换模型（将环境变量应用到当前 shell）
+# 直接调用二进制需要 eval
 eval "$(ccm glm global)"
 
-# 或从源码运行
+# 或从源码运行（不安装）
 uv run ccm glm china
 uv run ccc glm china     # 切换 + 启动
 ```
+
+> **注意：** 正常安装后（`./install.sh`），shell 函数会自动处理 eval，直接运行 `ccm glm global` 即可。
 
 ---
 
