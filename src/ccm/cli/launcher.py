@@ -7,7 +7,6 @@ and launches Claude Code.
 import os
 import subprocess
 import sys
-from typing import Optional
 
 from rich.console import Console
 
@@ -38,21 +37,13 @@ def main():
         switch_and_launch_openrouter(open_provider, remaining_args)
         return
 
-    # Check if it's a known model or an account name
+    # Check if it's a known model
     result = get_provider(model)
 
-    if result is None and not model.startswith("-"):
-        # Treat as account name
-        switch_and_launch_account(model, remaining_args)
-        return
-
-    # Handle model:account format
-    if ":" in model:
-        parts = model.split(":", 1)
-        model_type = parts[0]
-        account_name = parts[1]
-        switch_and_launch_with_account(model_type, account_name, remaining_args)
-        return
+    if result is None:
+        console.print(f"[red]❌ Unknown model: {model}[/red]")
+        console.print("[yellow]Run 'ccc' without arguments to see available models.[/yellow]")
+        sys.exit(1)
 
     # Switch to provider and launch
     region_or_variant = None
@@ -78,20 +69,16 @@ def show_usage():
     console.print("""
 [bold]Usage:[/bold] ccc <model> [region|variant] [claude-options]
        ccc open <provider> [claude-options]
-       ccc <account> [claude-options]        # Switch account then launch (default model)
-       ccc <model>:<account> [claude-options]
 
 [bold]Examples:[/bold]
   ccc deepseek                              # Launch with DeepSeek
   ccc open kimi                             # Launch with OpenRouter (kimi)
-  ccc kimi --dangerously-skip-permissions   # Pass options to Claude Code
-  ccc woohelps                              # Switch to 'woohelps' account and launch
-  ccc claude:work                           # Switch to 'work' account and use Claude
+  ccc kimi china                            # Launch with Kimi (China region)
+  ccc glm --dangerously-skip-permissions    # Pass options to Claude Code
 
 [bold]Available models:[/bold]
   Official: deepseek, glm, kimi, qwen, seed|doubao, claude, minimax
   OpenRouter: open <provider>
-  Account:  <account> | claude:<account>
 """)
 
 
@@ -140,38 +127,6 @@ def switch_and_launch_openrouter(provider: str, claude_args: list[str]):
 
     # Launch Claude Code
     launch_claude(claude_args)
-
-
-def switch_and_launch_account(account_name: str, claude_args: list[str]):
-    """Switch to account and launch Claude Code."""
-    # TODO: Implement account switching in Phase 3
-    console.print(f"[yellow]Account switching not yet implemented. Would switch to: {account_name}[/yellow]")
-    console.print("[yellow]Falling back to default claude...[/yellow]")
-
-    config = load_config()
-    generator = ShellExportGenerator(config)
-
-    exports, success = generator.generate_for_provider("claude")
-
-    if not success:
-        console.print(f"[red]❌ {exports}[/red]")
-        sys.exit(1)
-
-    apply_exports(exports)
-
-    console.print()
-    console.print(f"[green]🚀 Launching Claude Code...[/green]")
-    console.print()
-
-    launch_claude(claude_args)
-
-
-def switch_and_launch_with_account(model: str, account_name: str, claude_args: list[str]):
-    """Switch account and model, then launch Claude Code."""
-    # TODO: Implement account switching in Phase 3
-    console.print(f"[yellow]Account switching not yet implemented. Would switch to: {account_name}[/yellow]")
-
-    switch_and_launch(model, None, claude_args)
 
 
 def apply_exports(exports: str):
