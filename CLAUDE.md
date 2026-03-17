@@ -72,11 +72,8 @@ OpenRouter exports set:
 
 ### Install (Python version)
 ```bash
-# Using uv (recommended)
-uv tool install git+https://github.com/foreveryh/claude-code-switch.git
-
-# Or from source
-git clone https://github.com/foreveryh/claude-code-switch.git
+# From source
+git clone <repo-url>
 cd claude-code-switch
 uv tool install .
 ```

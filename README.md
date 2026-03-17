@@ -1,8 +1,6 @@
 # Claude Code Switch (ccm)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/issues)
 
 Switch Claude Code between AI providers with one command.
 
@@ -11,16 +9,15 @@ Switch Claude Code between AI providers with one command.
 ## Quick Start
 
 ```bash
-# 1. Install
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
+# 1. Install from source
+git clone <repo-url>
+cd claude-code-switch
+uv tool install .
 
-# 2. Reload shell
-source ~/.zshrc  # or ~/.bashrc
-
-# 3. Configure your API keys
+# 2. Configure your API keys
 ccm config
 
-# 4. Switch and use
+# 3. Switch and use
 eval "$(ccm glm)"          # switch to GLM (eval mode)
 ccc glm global             # switch + launch Claude Code
 
@@ -37,14 +34,11 @@ ccm project glm china      # GLM for this project only
 
 CCM has been migrated to Python for better maintainability, testing, and cross-platform support.
 
-### Install Python Version
+### Install
 
 ```bash
-# Using uv (recommended)
-uv tool install git+https://github.com/foreveryh/claude-code-switch.git
-
-# Or from source
-git clone https://github.com/foreveryh/claude-code-switch.git
+# From source
+git clone <repo-url>
 cd claude-code-switch
 uv tool install .
 ```
@@ -62,18 +56,11 @@ See [Python Version Guide](docs/PYTHON_VERSION.md) for full documentation.
 
 ## Installation
 
-### Quick Install (Recommended)
+### From Source
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
-source ~/.zshrc  # or ~/.bashrc
-```
-
-### Local Install
-```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+git clone <repo-url>
 cd claude-code-switch
-./install.sh
-source ~/.zshrc
+uv tool install .
 ```
 
 ### Install Modes
@@ -321,7 +308,7 @@ uv run ccc glm china     # Switch + launch
 Contributions are welcome! Here's how you can help:
 
 ### Report Issues
-Found a bug or have a feature request? [Open an issue](https://github.com/foreveryh/claude-code-switch/issues).
+Found a bug or have a feature request? Please open an issue.
 
 ### Submit Code
 1. Fork the repository
@@ -332,7 +319,7 @@ Found a bug or have a feature request? [Open an issue](https://github.com/foreve
 
 ### Development
 ```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+git clone <repo-url>
 cd claude-code-switch
 uv run ccm --help    # Test locally without installing
 ```

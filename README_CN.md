@@ -1,8 +1,6 @@
 # Claude Code Switch (ccm)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/foreveryh/claude-code-switch.svg)](https://github.com/foreveryh/claude-code-switch/issues)
 
 一条命令切换 Claude Code 的 AI 提供商。
 
@@ -11,16 +9,15 @@
 ## 快速开始
 
 ```bash
-# 1. 安装
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
+# 1. 从源码安装
+git clone <repo-url>
+cd claude-code-switch
+uv tool install .
 
-# 2. 重新加载 shell
-source ~/.zshrc  # 或 ~/.bashrc
-
-# 3. 配置 API 密钥
+# 2. 配置 API 密钥
 ccm config
 
-# 4. 切换并使用
+# 3. 切换并使用
 ccm glm              # 切换到 GLM
 ccc glm global       # 切换 + 启动 Claude Code
 
@@ -36,18 +33,11 @@ ccm project glm china    # 仅此项目使用 GLM
 
 ## 安装
 
-### 快速安装（推荐）
+### 从源码安装
 ```bash
-curl -fsSL https://raw.githubusercontent.com/foreveryh/claude-code-switch/main/quick-install.sh | bash
-source ~/.zshrc  # 或 ~/.bashrc
-```
-
-### 本地安装
-```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+git clone <repo-url>
 cd claude-code-switch
-./install.sh
-source ~/.zshrc
+uv tool install .
 ```
 
 ### 安装模式
@@ -286,7 +276,7 @@ uv run ccc glm china     # 切换 + 启动
 欢迎贡献！你可以通过以下方式参与：
 
 ### 报告问题
-发现 bug 或有功能建议？[提交 Issue](https://github.com/foreveryh/claude-code-switch/issues)。
+发现 bug 或有功能建议？请提交 Issue。
 
 ### 提交代码
 1. Fork 本仓库
@@ -297,7 +287,7 @@ uv run ccc glm china     # 切换 + 启动
 
 ### 开发
 ```bash
-git clone https://github.com/foreveryh/claude-code-switch.git
+git clone <repo-url>
 cd claude-code-switch
 uv run ccm --help    # 本地测试，无需安装
 ```
