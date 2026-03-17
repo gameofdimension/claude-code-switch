@@ -158,11 +158,11 @@ ccm() {
   case "\$1" in
     ""|"help"|"-h"|"--help"|"status"|"st"|"config"|"cfg"|"save-account"|"switch-account"|"list-accounts"|"delete-account"|"current-account"|"debug-keychain"|"project"|"user")
       # These commands don't need eval, execute directly
-      python3 -m ccm "\$@"
+      command ccm "\$@"
       ;;
     *)
       # All other commands (model switching) use eval to set environment variables
-      eval "\$(python3 -m ccm "\$@")"
+      eval "\$(command ccm "\$@")"
       ;;
   esac
 }
@@ -182,7 +182,7 @@ ccc() {
     return 1
   fi
   # Switch environment and launch Claude Code
-  python3 -m ccm.cli.launcher "\$@"
+  command ccc "\$@"
 }
 $END_MARK
 EOF

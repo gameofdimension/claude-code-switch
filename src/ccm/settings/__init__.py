@@ -1,1 +1,4 @@
-"""Settings module - Placeholder for Phase 4."""
+"""Settings management for ccm package.
+
+Provides project-level and user-level configuration management.
+"""
