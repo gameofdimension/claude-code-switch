@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Uninstaller for Claude Code Model Switcher (CCM)
+# - Uninstalls Python package (uv tool or pip)
 # - Removes ccm/ccc function blocks from shell rc files
-# - Removes PATH-installed ccm/ccc wrappers (when safely identified)
-# - Removes installed assets under standard data dirs
+# - Removes old bash wrappers and data dirs (legacy cleanup)
 
 BEGIN_MARK="# >>> ccm function begin >>>"
 END_MARK="# <<< ccm function end <<<"
@@ -141,7 +141,43 @@ remove_data_dirs() {
   fi
 }
 
+uninstall_python_package() {
+  # Try uv tool uninstall first
+  if command -v uv >/dev/null 2>&1; then
+    if uv tool list 2>/dev/null | grep -q "^ccm "; then
+      uv tool uninstall ccm
+      echo "🗑️  Uninstalled ccm via uv tool"
+      return 0
+    fi
+  fi
+
+  # Try pip uninstall
+  if python3 -c "import ccm" 2>/dev/null; then
+    pip3 uninstall -y ccm 2>/dev/null || true
+    echo "🗑️  Uninstalled ccm via pip"
+    return 0
+  fi
+
+  # Check if ccm/ccc executables exist in typical uv/pip locations
+  local uv_bin="$HOME/.local/bin/ccm"
+  local pip_bin="$HOME/.local/bin/ccm"
+  if [[ -f "$uv_bin" || -f "$pip_bin" ]]; then
+    # Try pip as fallback
+    pip3 uninstall -y ccm 2>/dev/null || true
+    # Also try uv in case it was installed there
+    uv tool uninstall ccm 2>/dev/null || true
+  fi
+
+  return 0
+}
+
 main() {
+  log_info "Uninstalling CCM..."
+
+  # Uninstall Python package
+  uninstall_python_package
+
+  # Remove rc function blocks
   local rc_files
   rc_files=( $(detect_rc_files) )
   local rc
@@ -149,10 +185,14 @@ main() {
     remove_block "$rc"
   done
 
+  # Remove old bash wrappers (legacy)
   remove_wrappers
+
+  # Remove data directories (legacy)
   remove_data_dirs
 
-  echo "✅ Uninstall complete. Reload your shell if you used rc functions."
+  echo ""
+  echo "✅ Uninstall complete. Run 'source ~/.zshrc' (or ~/.bashrc) to reload your shell."
 }
 
 main "$@"

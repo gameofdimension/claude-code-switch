@@ -196,9 +196,10 @@ legacy_detect() {
   rc_files=( $(detect_rc_files) )
   local rc
   for rc in "${rc_files[@]:-}"; do
-    if grep -qF "$BEGIN_MARK" "$rc"; then
+    # Check for old-format rc blocks that reference ccm.sh script path
+    if grep -qE "ccm\.sh|script_path|local script=" "$rc" 2>/dev/null; then
       found=true
-      legacy_msgs+=("- legacy rc block in $rc")
+      legacy_msgs+=("- old-format rc block in $rc (references ccm.sh)")
     fi
   done
   if [[ -d "$HOME/.ccm" ]]; then
@@ -224,10 +225,15 @@ cleanup_legacy() {
   rc_files=( $(detect_rc_files) )
   local rc
   for rc in "${rc_files[@]:-}"; do
-    remove_existing_block "$rc"
+    # Only remove if it contains old-format references to ccm.sh
+    if grep -qE "ccm\.sh|script_path|local script=" "$rc" 2>/dev/null; then
+      remove_existing_block "$rc"
+      log_info "$(t "Removed old-format rc block from:" "已移除旧版 rc 配置：") $rc"
+    fi
   done
   rm -rf "$HOME/.ccm" || true
   rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/ccm" || true
+  log_info "$(t "Legacy cleanup complete" "旧版清理完成")"
 }
 
 check_uv() {
@@ -320,6 +326,25 @@ main() {
     install_with_uv || install_with_pip
   else
     install_with_pip
+  fi
+
+  # Handle legacy installations (old bash version)
+  local legacy_info=""
+  if legacy_info=$(legacy_detect ""); then
+    echo ""
+    log_warn "$(t "Legacy installation detected:" "检测到旧版安装：")"
+    echo "$legacy_info"
+    echo ""
+    if $CLEANUP_LEGACY; then
+      cleanup_legacy
+    elif [[ -t 0 && "$ASSUME_YES" == "false" ]]; then
+      read -r -p "$(t "Clean legacy installation? [y/N]: " "清理旧版安装？[y/N]：")" reply
+      case "$reply" in
+        y|Y|yes|YES)
+          cleanup_legacy
+          ;;
+      esac
+    fi
   fi
 
   # Optional rc injection
