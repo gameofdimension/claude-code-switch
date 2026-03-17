@@ -5,14 +5,11 @@ eval'd by the parent shell to set environment variables.
 """
 
 import os
-import shlex
 from dataclasses import dataclass
-from typing import Any
 
-from ccm.core.config import Config, is_effectively_set, load_config
+from ccm.core.config import Config, load_config
 from ccm.core.providers import (
     OPENROUTER_PROVIDERS,
-    ProviderConfig,
     get_openrouter_provider,
     get_provider,
     normalize_region,
@@ -240,6 +237,130 @@ class ShellExportGenerator:
             haiku_model=haiku_model,
         )), True
 
+    def get_env_for_provider(
+        self, provider_name: str, region: str | None = None, variant: str | None = None
+    ) -> tuple[dict[str, str], bool]:
+        """Get resolved environment variables for a provider.
+
+        Returns (env_dict, success).
+        If success is False, env_dict may contain an 'error' key.
+        """
+        result = get_provider(provider_name)
+        if result is None:
+            return {"error": f"Unknown provider: {provider_name}"}, False
+
+        provider, canonical_name = result
+        env: dict[str, str] = {}
+
+        # Handle region-aware providers
+        if provider.regions:
+            try:
+                region = normalize_region(region)
+            except ValueError as e:
+                return {"error": str(e)}, False
+
+            # Check API key
+            if not self.config.is_set(provider.auth_token_var or ""):
+                return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+            # Get the actual API key value
+            auth_token = self.config.get(provider.auth_token_var or "")
+            if not auth_token:
+                return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+            base_url = provider.get_base_url(region)
+            model_env = provider.get_model_env(region)
+            model_default = provider.get_model_default(region)
+            model = self.config.get(model_env or "") or model_default
+
+            env["ANTHROPIC_BASE_URL"] = base_url
+            env["ANTHROPIC_AUTH_TOKEN"] = auth_token
+            env["ANTHROPIC_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = model
+            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+
+            return env, True
+
+        # Handle variant providers (like seed)
+        if provider.variants and variant:
+            variant_lower = variant.lower()
+            if variant_lower not in provider.variants:
+                return {"error": f"Unknown variant: {variant}. Valid: {', '.join(provider.variants.keys())}"}, False
+
+            if not self.config.is_set(provider.auth_token_var or ""):
+                return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+            auth_token = self.config.get(provider.auth_token_var or "")
+            if not auth_token:
+                return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+            model = provider.variants[variant_lower]
+
+            env["ANTHROPIC_BASE_URL"] = provider.base_url
+            env["ANTHROPIC_AUTH_TOKEN"] = auth_token
+            env["ANTHROPIC_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = model
+            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+
+            return env, True
+
+        # Standard provider
+        if not self.config.is_set(provider.auth_token_var or ""):
+            # Special case: Claude can work without API key (Pro subscription)
+            if canonical_name == "claude":
+                model = self.config.get("CLAUDE_MODEL") or provider.model_default or "claude-sonnet-4-5-20250929"
+                opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
+                haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
+
+                env["ANTHROPIC_MODEL"] = model
+                env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
+                env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opus_model
+                env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haiku_model
+                env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+                # Unset API key for official Claude
+                env["__unset__"] = "ANTHROPIC_API_URL,ANTHROPIC_API_KEY"
+
+                return env, True
+
+            return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+        auth_token = self.config.get(provider.auth_token_var or "")
+        if not auth_token and canonical_name != "claude":
+            return {"error": f"Please configure {provider.auth_token_var}"}, False
+
+        model = self.config.get(provider.model_env or "") or provider.model_default
+        if not model:
+            return {"error": f"No model configured for {provider_name}"}, False
+
+        # For Claude, also get opus and haiku models
+        sonnet_model = model
+        opus_model = model
+        haiku_model = model
+
+        if canonical_name == "claude":
+            opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
+            haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
+
+        # Handle seed provider without variant
+        if canonical_name == "seed" and not variant:
+            model = self.config.get("SEED_MODEL") or provider.model_default or "ark-code-latest"
+
+        if provider.base_url:
+            env["ANTHROPIC_BASE_URL"] = provider.base_url
+        if auth_token:
+            env["ANTHROPIC_AUTH_TOKEN"] = auth_token
+        env["ANTHROPIC_MODEL"] = model
+        env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = sonnet_model
+        env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opus_model
+        env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haiku_model
+        env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+
+        return env, True
+
     def generate_for_openrouter(self, provider_name: str) -> tuple[str, bool]:
         """Generate exports for OpenRouter provider.
 
@@ -269,3 +390,35 @@ class ShellExportGenerator:
         ]
 
         return "\n".join(lines), True
+
+    def get_env_for_openrouter(self, provider_name: str) -> tuple[dict[str, str], bool]:
+        """Get resolved environment variables for OpenRouter provider.
+
+        Returns (env_dict, success).
+        """
+        provider_config = get_openrouter_provider(provider_name)
+        if provider_config is None:
+            available = ", ".join(OPENROUTER_PROVIDERS.keys())
+            return {"error": f"Unknown OpenRouter provider: {provider_name}. Available: {available}"}, False
+
+        if not self.config.is_set("OPENROUTER_API_KEY"):
+            return {"error": "Please configure OPENROUTER_API_KEY"}, False
+
+        auth_token = self.config.get("OPENROUTER_API_KEY")
+        if not auth_token:
+            return {"error": "Please configure OPENROUTER_API_KEY"}, False
+
+        model = provider_config["model"]
+
+        env = {
+            "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+            "ANTHROPIC_AUTH_TOKEN": auth_token,
+            "ANTHROPIC_MODEL": model,
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": model,
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": model,
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL": model,
+            "CLAUDE_CODE_SUBAGENT_MODEL": model,
+            "__unset__": "ANTHROPIC_API_KEY",  # Avoid conflicts
+        }
+
+        return env, True

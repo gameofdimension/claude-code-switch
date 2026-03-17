@@ -82,19 +82,36 @@ def show_usage():
 """)
 
 
+def apply_env(env: dict[str, str]):
+    """Apply environment variables from resolved dict."""
+    # First, unset managed variables
+    for var in ShellExportGenerator.ENV_VARS:
+        os.environ.pop(var, None)
+
+    # Apply new values
+    for key, value in env.items():
+        if key == "__unset__":
+            # Handle special unset directive
+            for var in value.split(","):
+                os.environ.pop(var.strip(), None)
+        else:
+            os.environ[key] = value
+
+
 def switch_and_launch(model: str, region: str | None, claude_args: list[str]):
     """Switch to provider and launch Claude Code."""
     config = load_config()
     generator = ShellExportGenerator(config)
 
-    exports, success = generator.generate_for_provider(model, region)
+    env, success = generator.get_env_for_provider(model, region)
 
     if not success:
-        console.print(f"[red]❌ {exports}[/red]")
+        error_msg = env.get("error", "Unknown error")
+        console.print(f"[red]❌ {error_msg}[/red]")
         sys.exit(1)
 
-    # Apply exports to current process environment
-    apply_exports(exports)
+    # Apply environment variables to current process
+    apply_env(env)
 
     console.print()
     console.print(f"[green]🚀 Launching Claude Code...[/green]")
@@ -111,14 +128,15 @@ def switch_and_launch_openrouter(provider: str, claude_args: list[str]):
     config = load_config()
     generator = ShellExportGenerator(config)
 
-    exports, success = generator.generate_for_openrouter(provider)
+    env, success = generator.get_env_for_openrouter(provider)
 
     if not success:
-        console.print(f"[red]❌ {exports}[/red]")
+        error_msg = env.get("error", "Unknown error")
+        console.print(f"[red]❌ {error_msg}[/red]")
         sys.exit(1)
 
-    # Apply exports to current process environment
-    apply_exports(exports)
+    # Apply environment variables to current process
+    apply_env(env)
 
     console.print()
     console.print(f"[green]🚀 Launching Claude Code with OpenRouter ({provider})...[/green]")
@@ -127,29 +145,6 @@ def switch_and_launch_openrouter(provider: str, claude_args: list[str]):
 
     # Launch Claude Code
     launch_claude(claude_args)
-
-
-def apply_exports(exports: str):
-    """Apply shell exports to the current process environment."""
-    for line in exports.splitlines():
-        if line.startswith("export "):
-            # Parse export VAR='value' or export VAR="${VAR}"
-            line = line[7:]  # Remove 'export '
-            if "=" in line:
-                var, value = line.split("=", 1)
-                # Remove surrounding quotes
-                if value.startswith("'") and value.endswith("'"):
-                    value = value[1:-1]
-                elif value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1]
-                # Handle variable references like ${VAR}
-                if value.startswith("${") and value.endswith("}"):
-                    ref_var = value[2:-1]
-                    value = os.environ.get(ref_var, "")
-                os.environ[var] = value
-        elif line.startswith("unset "):
-            var = line[6:]
-            os.environ.pop(var, None)
 
 
 def launch_claude(args: list[str]):
