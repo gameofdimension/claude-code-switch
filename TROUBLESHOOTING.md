@@ -111,9 +111,6 @@ ccm: error: unrecognized arguments: xxx
 # 1. 修改代码后，重新安装
 uv tool install . --reinstall
 
-# 或者使用 pip
-pip install -e . --force-reinstall
-
 # 2. 验证更新
 ccm --version    # 检查版本是否更新
 ccm --help       # 确认新命令出现在帮助中

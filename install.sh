@@ -243,31 +243,12 @@ check_uv() {
   return 1
 }
 
-check_python() {
-  if command -v python3 >/dev/null 2>&1; then
-    return 0
-  fi
-  return 1
-}
-
 install_with_uv() {
   log_info "Installing with uv..."
 
   if $LOCAL_MODE && [[ -f "$SCRIPT_DIR/pyproject.toml" ]]; then
     cd "$SCRIPT_DIR"
     uv tool install . --reinstall
-  else
-    log_error "Local installation requires pyproject.toml"
-    return 1
-  fi
-}
-
-install_with_pip() {
-  log_info "Installing with pip..."
-
-  if $LOCAL_MODE && [[ -f "$SCRIPT_DIR/pyproject.toml" ]]; then
-    cd "$SCRIPT_DIR"
-    pip3 install --user -e .
   else
     log_error "Local installation requires pyproject.toml"
     return 1
@@ -316,17 +297,13 @@ main() {
   fi
 
   # Check prerequisites
-  if ! check_python; then
-    log_error "Python 3 is required but not found."
+  if ! check_uv; then
+    log_error "uv is required but not found. Install it from https://docs.astral.sh/uv/"
     exit 1
   fi
 
   # Install the package
-  if check_uv; then
-    install_with_uv || install_with_pip
-  else
-    install_with_pip
-  fi
+  install_with_uv
 
   # Handle legacy installations (old bash version)
   local legacy_info=""

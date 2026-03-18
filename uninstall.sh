@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Uninstaller for Claude Code Model Switcher (CCM)
-# - Uninstalls Python package (uv tool or pip)
+# - Uninstalls Python package (uv tool)
 # - Removes ccm/ccc function blocks from shell rc files
 # - Removes old bash wrappers and data dirs (legacy cleanup)
 
@@ -142,30 +142,13 @@ remove_data_dirs() {
 }
 
 uninstall_python_package() {
-  # Try uv tool uninstall first
+  # Uninstall via uv tool
   if command -v uv >/dev/null 2>&1; then
     if uv tool list 2>/dev/null | grep -q "^ccm "; then
       uv tool uninstall ccm
       echo "🗑️  Uninstalled ccm via uv tool"
       return 0
     fi
-  fi
-
-  # Try pip uninstall
-  if python3 -c "import ccm" 2>/dev/null; then
-    pip3 uninstall -y ccm 2>/dev/null || true
-    echo "🗑️  Uninstalled ccm via pip"
-    return 0
-  fi
-
-  # Check if ccm/ccc executables exist in typical uv/pip locations
-  local uv_bin="$HOME/.local/bin/ccm"
-  local pip_bin="$HOME/.local/bin/ccm"
-  if [[ -f "$uv_bin" || -f "$pip_bin" ]]; then
-    # Try pip as fallback
-    pip3 uninstall -y ccm 2>/dev/null || true
-    # Also try uv in case it was installed there
-    uv tool uninstall ccm 2>/dev/null || true
   fi
 
   return 0
