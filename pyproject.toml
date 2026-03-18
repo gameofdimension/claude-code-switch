@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Peng", email = "noreply@example.com" }
+    { name = "gameofdimension", email = "gameofdimension@gmail.com" }
 ]
 keywords = ["claude", "anthropic", "ai", "cli", "model-switcher"]
 classifiers = [
