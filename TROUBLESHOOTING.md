@@ -109,7 +109,7 @@ ccm: error: unrecognized arguments: xxx
 
 ```bash
 # 1. 修改代码后，重新安装
-uv tool install . --force
+uv tool install . --reinstall
 
 # 或者使用 pip
 pip install -e . --force-reinstall
@@ -134,7 +134,7 @@ ccm --version
 ```bash
 # 开发循环
 1. vim src/ccm/xxx.py    # 编辑代码
-2. uv tool install . --force  # 安装更新
+2. uv tool install . --reinstall  # 安装更新
 3. ccm <test-command>    # 测试功能
 4. 如有问题，回到步骤 1
 ```
@@ -223,7 +223,7 @@ ccm config
 
 在报告问题前，请逐一检查：
 
-- [ ] 已安装最新版本：`uv tool install . --force`
+- [ ] 已安装最新版本：`uv tool install . --reinstall`
 - [ ] 已重新加载 shell：`source ~/.zshrc`
 - [ ] 已执行 `claude /logout` 清除认证冲突
 - [ ] 配置文件正确：`ccm config` 检查 API keys

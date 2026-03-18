@@ -75,7 +75,7 @@ OpenRouter exports set:
 # From source
 git clone https://github.com/gameofdimension/claude-code-switch.git
 cd claude-code-switch
-uv tool install .
+uv tool install . --reinstall   # Use --reinstall to force rebuild
 ```
 
 ### Switch in current shell

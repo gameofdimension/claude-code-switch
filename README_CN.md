@@ -49,6 +49,16 @@ uv tool install .
 ./uninstall.sh
 ```
 
+### 更新
+
+拉取最新代码后：
+
+```bash
+uv tool install . --reinstall
+# 或
+./install.sh
+```
+
 ---
 
 ## 首次配置

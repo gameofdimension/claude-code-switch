@@ -255,7 +255,7 @@ install_with_uv() {
 
   if $LOCAL_MODE && [[ -f "$SCRIPT_DIR/pyproject.toml" ]]; then
     cd "$SCRIPT_DIR"
-    uv tool install . --force
+    uv tool install . --reinstall
   else
     log_error "Local installation requires pyproject.toml"
     return 1

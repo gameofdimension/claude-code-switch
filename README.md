@@ -49,6 +49,16 @@ For automatic env var handling, run the installer:
 ./uninstall.sh
 ```
 
+### Upgrade
+
+After pulling latest changes:
+
+```bash
+uv tool install . --reinstall
+# or
+./install.sh
+```
+
 ---
 
 ## First-Time Setup
