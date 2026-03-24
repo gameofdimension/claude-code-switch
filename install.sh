@@ -326,12 +326,21 @@ main() {
 
   # Optional rc injection
   if $ENABLE_RC && [[ "$MODE" != "project" ]]; then
-    local rc_files
-    rc_files=( $(detect_rc_files) )
-    local rc_target="${rc_files[0]:-$HOME/.zshrc}"
-    remove_existing_block "$rc_target"
-    append_function_block "$rc_target"
-    log_info "$(t "Injected ccm/ccc functions into:" "已写入 ccm/ccc 函数到：") $rc_target"
+    # Write to both .zshrc and .bashrc if they exist
+    local rc_written=()
+    local rc
+    for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+      if [[ -f "$rc" ]]; then
+        remove_existing_block "$rc"
+        append_function_block "$rc"
+        rc_written+=("$rc")
+      fi
+    done
+    if [[ ${#rc_written[@]} -gt 0 ]]; then
+      log_info "$(t "Injected ccm/ccc functions into:" "已写入 ccm/ccc 函数到：") ${rc_written[*]}"
+    else
+      log_warn "$(t "No .zshrc or .bashrc found, skipping rc injection" "未找到 .zshrc 或 .bashrc，跳过 rc 写入")"
+    fi
   fi
 
   echo ""
@@ -340,7 +349,7 @@ main() {
 
   echo "$(t "Next steps:" "下一步：")"
   if $ENABLE_RC; then
-    echo "  source ~/.zshrc $(t "(or ~/.bashrc)" "（或 ~/.bashrc）")"
+    echo "  source ~/.zshrc $(t "or" "或") source ~/.bashrc"
     echo "  ccm status"
   else
     echo "  eval \"\$(ccm deepseek)\"   # $(t "Apply env to current shell" "在当前 shell 生效")"

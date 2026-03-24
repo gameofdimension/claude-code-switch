@@ -17,16 +17,6 @@ log_warn() {
   echo "Warning: $*" >&2
 }
 
-detect_rc_files() {
-  local rc_files=()
-  [[ -f "$HOME/.zshrc" ]] && rc_files+=("$HOME/.zshrc")
-  [[ -f "$HOME/.zprofile" ]] && rc_files+=("$HOME/.zprofile")
-  [[ -f "$HOME/.bashrc" ]] && rc_files+=("$HOME/.bashrc")
-  [[ -f "$HOME/.bash_profile" ]] && rc_files+=("$HOME/.bash_profile")
-  [[ -f "$HOME/.profile" ]] && rc_files+=("$HOME/.profile")
-  echo "${rc_files[*]}"
-}
-
 remove_block() {
   local rc="$1"
   [[ -f "$rc" ]] || return 0
@@ -160,12 +150,12 @@ main() {
   # Uninstall Python package
   uninstall_python_package
 
-  # Remove rc function blocks
-  local rc_files
-  rc_files=( $(detect_rc_files) )
+  # Remove rc function blocks from .zshrc and .bashrc
   local rc
-  for rc in "${rc_files[@]:-}"; do
-    remove_block "$rc"
+  for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+    if [[ -f "$rc" ]]; then
+      remove_block "$rc"
+    fi
   done
 
   # Remove old bash wrappers (legacy)
@@ -175,7 +165,7 @@ main() {
   remove_data_dirs
 
   echo ""
-  echo "✅ Uninstall complete. Run 'source ~/.zshrc' (or ~/.bashrc) to reload your shell."
+  echo "✅ Uninstall complete. Run 'source ~/.zshrc' or 'source ~/.bashrc' to reload your shell."
 }
 
 main "$@"
