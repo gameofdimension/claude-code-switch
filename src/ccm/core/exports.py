@@ -159,21 +159,13 @@ class ShellExportGenerator:
             # Get model from config or use default
             model = self.config.get(model_env or "") or model_default
 
-            # Provider-specific model mappings
-            sonnet_model = model
-            opus_model = model
-            haiku_model = model
-            if canonical_name == "glm":
-                sonnet_model = "glm-4.7"
-                haiku_model = "glm-4.5-air"
-
             return self.generate_exports(ExportConfig(
                 base_url=base_url,
                 auth_token_var=provider.auth_token_var,
                 model=model,
-                sonnet_model=sonnet_model,
-                opus_model=opus_model,
-                haiku_model=haiku_model,
+                sonnet_model=model,
+                opus_model=model,
+                haiku_model=model,
             )), True
 
         # Handle variant providers (like seed)
@@ -278,20 +270,12 @@ class ShellExportGenerator:
             model_default = provider.get_model_default(region)
             model = self.config.get(model_env or "") or model_default
 
-            # Provider-specific model mappings
-            sonnet_model = model
-            opus_model = model
-            haiku_model = model
-            if canonical_name == "glm":
-                sonnet_model = "glm-4.7"
-                haiku_model = "glm-4.5-air"
-
             env["ANTHROPIC_BASE_URL"] = base_url
             env["ANTHROPIC_AUTH_TOKEN"] = auth_token
             env["ANTHROPIC_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = sonnet_model
-            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opus_model
-            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haiku_model
+            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = model
+            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = model
             env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
 
             return env, True

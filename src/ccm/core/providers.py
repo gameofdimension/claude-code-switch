@@ -111,17 +111,17 @@ PROVIDERS: dict[str, ProviderConfig] = {
         name="glm",
         aliases=["glm5"],
         auth_token_var="GLM_API_KEY",
-        model_default="glm-5",
+        model_default="glm-5-turbo",
         model_env="GLM_MODEL",
         regions={
             "global": RegionConfig(
                 base_url="https://api.z.ai/api/anthropic",
-                model_default="glm-5",
+                model_default="glm-5-turbo",
                 model_env="GLM_MODEL",
             ),
             "china": RegionConfig(
                 base_url="https://open.bigmodel.cn/api/anthropic",
-                model_default="glm-5",
+                model_default="glm-5-turbo",
                 model_env="GLM_MODEL",
             ),
         },
