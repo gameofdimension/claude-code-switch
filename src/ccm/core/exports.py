@@ -26,6 +26,10 @@ class ExportConfig:
     sonnet_model: str | None = None
     opus_model: str | None = None
     haiku_model: str | None = None
+    # User model overrides (from CLAUDE_MODEL, OPUS_MODEL, HAIKU_MODEL)
+    override_model: str | None = None
+    override_opus: str | None = None
+    override_haiku: str | None = None
     # Whether to unset API_KEY (for official Claude)
     unset_api_key: bool = False
 
@@ -113,13 +117,17 @@ class ShellExportGenerator:
         if export_config.model:
             lines.append(self._export("ANTHROPIC_MODEL", export_config.model))
 
-        # Default models
-        if export_config.sonnet_model:
-            lines.append(self._export("ANTHROPIC_DEFAULT_SONNET_MODEL", export_config.sonnet_model))
-        if export_config.opus_model:
-            lines.append(self._export("ANTHROPIC_DEFAULT_OPUS_MODEL", export_config.opus_model))
-        if export_config.haiku_model:
-            lines.append(self._export("ANTHROPIC_DEFAULT_HAIKU_MODEL", export_config.haiku_model))
+        # Default models — overrides take priority
+        sonnet_value = export_config.override_model or export_config.sonnet_model
+        opus_value = export_config.override_opus or export_config.opus_model
+        haiku_value = export_config.override_haiku or export_config.haiku_model
+
+        if sonnet_value:
+            lines.append(self._export("ANTHROPIC_DEFAULT_SONNET_MODEL", sonnet_value))
+        if opus_value:
+            lines.append(self._export("ANTHROPIC_DEFAULT_OPUS_MODEL", opus_value))
+        if haiku_value:
+            lines.append(self._export("ANTHROPIC_DEFAULT_HAIKU_MODEL", haiku_value))
 
         # Subagent model (same as main model by default)
         if export_config.model:

@@ -135,6 +135,49 @@ class TestShellExportGenerator:
         assert success is False
         assert "OPENROUTER_API_KEY" in exports
 
+    def test_generate_exports_with_model_overrides(self) -> None:
+        """Test that model override fields override provider defaults."""
+        export_config = ExportConfig(
+            base_url="https://api.test.com",
+            auth_token_var="TEST_API_KEY",
+            model="provider-model",
+            sonnet_model="provider-model",
+            opus_model="provider-model",
+            haiku_model="provider-model",
+            override_model="my-sonnet",
+            override_opus="my-opus",
+            override_haiku="my-haiku",
+        )
+
+        result = self.generator.generate_exports(export_config)
+
+        # Provider model should still be set for ANTHROPIC_MODEL
+        assert "export ANTHROPIC_MODEL='provider-model'" in result
+        # But override_model should override SONNET
+        assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='my-sonnet'" in result
+        # Override opus/haiku should also apply
+        assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='my-opus'" in result
+        assert "export ANTHROPIC_DEFAULT_HAIKU_MODEL='my-haiku'" in result
+
+    def test_generate_exports_without_model_overrides(self) -> None:
+        """Test that without overrides, original models are used."""
+        export_config = ExportConfig(
+            base_url="https://api.test.com",
+            auth_token_var="TEST_API_KEY",
+            model="provider-model",
+            sonnet_model="provider-model",
+            opus_model="provider-model",
+            haiku_model="provider-model",
+        )
+
+        result = self.generator.generate_exports(export_config)
+
+        # All model vars should be the same provider model
+        assert "export ANTHROPIC_MODEL='provider-model'" in result
+        assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='provider-model'" in result
+        assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='provider-model'" in result
+        assert "export ANTHROPIC_DEFAULT_HAIKU_MODEL='provider-model'" in result
+
     def test_generate_for_seed_with_variant(self) -> None:
         """Test generation for Seed with variant."""
         config = Config(ark_api_key="test-ark-key")
