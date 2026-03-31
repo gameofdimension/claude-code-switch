@@ -151,9 +151,9 @@ class TestShellExportGenerator:
 
         result = self.generator.generate_exports(export_config)
 
-        # Provider model should still be set for ANTHROPIC_MODEL
-        assert "export ANTHROPIC_MODEL='provider-model'" in result
-        # But override_model should override SONNET
+        # override_model should also override ANTHROPIC_MODEL
+        assert "export ANTHROPIC_MODEL='my-sonnet'" in result
+        # And SONNET
         assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='my-sonnet'" in result
         # Override opus/haiku should also apply
         assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='my-opus'" in result
@@ -198,6 +198,74 @@ class TestShellExportGenerator:
         # Claude should work without API key (Pro subscription)
         assert success is True
         assert "api.anthropic.com" in exports
+
+    def test_generate_for_deepseek_with_model_overrides(self) -> None:
+        """Test that CLAUDE_MODEL/OPUS_MODEL/HAIKU_MODEL override applies to non-Claude providers."""
+        config = Config(
+            deepseek_api_key="sk-test-deepseek",
+            claude_model="custom-sonnet",
+            opus_model="custom-opus",
+            haiku_model="custom-haiku",
+        )
+        generator = ShellExportGenerator(config)
+
+        exports, success = generator.generate_for_provider("deepseek")
+        assert success is True
+        assert "export ANTHROPIC_MODEL='custom-sonnet'" in exports
+        assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='custom-sonnet'" in exports
+        assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='custom-opus'" in exports
+        assert "export ANTHROPIC_DEFAULT_HAIKU_MODEL='custom-haiku'" in exports
+
+    def test_generate_for_glm_without_overrides_uses_provider_model(self) -> None:
+        """Test that without overrides, GLM uses its own model everywhere."""
+        config = Config(glm_api_key="test-glm-key")
+        generator = ShellExportGenerator(config)
+
+        exports, success = generator.generate_for_provider("glm")
+        assert success is True
+        assert "export ANTHROPIC_MODEL='glm-5-turbo'" in exports
+        assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='glm-5-turbo'" in exports
+        assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='glm-5-turbo'" in exports
+        assert "export ANTHROPIC_DEFAULT_HAIKU_MODEL='glm-5-turbo'" in exports
+
+    def test_generate_for_kimi_with_overrides(self) -> None:
+        """Test model override applies to region-aware providers."""
+        config = Config(
+            kimi_api_key="test-kimi-key",
+            claude_model="my-sonnet",
+        )
+        generator = ShellExportGenerator(config)
+
+        exports, success = generator.generate_for_provider("kimi", "global")
+        assert success is True
+        assert "export ANTHROPIC_MODEL='my-sonnet'" in exports
+        assert "export ANTHROPIC_DEFAULT_SONNET_MODEL='my-sonnet'" in exports
+
+    def test_generate_for_seed_with_overrides(self) -> None:
+        """Test model override applies to variant providers."""
+        config = Config(
+            ark_api_key="test-ark-key",
+            opus_model="my-opus",
+        )
+        generator = ShellExportGenerator(config)
+
+        exports, success = generator.generate_for_provider("seed", variant="deepseek")
+        assert success is True
+        assert "export ANTHROPIC_DEFAULT_OPUS_MODEL='my-opus'" in exports
+        # Without CLAUDE_MODEL override, main model comes from variant
+        assert "deepseek-v3.2" in exports
+
+    def test_generate_for_openrouter_with_overrides(self) -> None:
+        """Test model override applies to OpenRouter."""
+        config = Config(
+            openrouter_api_key="test-or-key",
+            haiku_model="my-haiku",
+        )
+        generator = ShellExportGenerator(config)
+
+        exports, success = generator.generate_for_openrouter("kimi")
+        assert success is True
+        assert "export ANTHROPIC_DEFAULT_HAIKU_MODEL='my-haiku'" in exports
 
 
 class TestExportConfig:

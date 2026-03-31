@@ -90,6 +90,21 @@ class ShellExportGenerator:
         """Generate an unset statement."""
         return f"unset {name}"
 
+    def _build_model_overrides(self) -> dict[str, str]:
+        """Build model override dict from user config.
+
+        Returns dict with keys 'override_model', 'override_opus', 'override_haiku'.
+        Only includes keys where the user has set a non-placeholder value.
+        """
+        overrides: dict[str, str] = {}
+        if self.config.is_set("claude_model"):
+            overrides["override_model"] = self.config.get("claude_model") or ""
+        if self.config.is_set("opus_model"):
+            overrides["override_opus"] = self.config.get("opus_model") or ""
+        if self.config.is_set("haiku_model"):
+            overrides["override_haiku"] = self.config.get("haiku_model") or ""
+        return overrides
+
     def generate_exports(self, export_config: ExportConfig) -> str:
         """Generate complete export statement block."""
         lines: list[str] = []
@@ -113,9 +128,10 @@ class ShellExportGenerator:
             lines.append(self._unset("ANTHROPIC_API_URL"))
             lines.append(self._unset("ANTHROPIC_API_KEY"))
 
-        # Model
-        if export_config.model:
-            lines.append(self._export("ANTHROPIC_MODEL", export_config.model))
+        # Model — override takes priority
+        model_value = export_config.override_model or export_config.model
+        if model_value:
+            lines.append(self._export("ANTHROPIC_MODEL", model_value))
 
         # Default models — overrides take priority
         sonnet_value = export_config.override_model or export_config.sonnet_model
@@ -130,8 +146,8 @@ class ShellExportGenerator:
             lines.append(self._export("ANTHROPIC_DEFAULT_HAIKU_MODEL", haiku_value))
 
         # Subagent model (same as main model by default)
-        if export_config.model:
-            lines.append(self._export("CLAUDE_CODE_SUBAGENT_MODEL", export_config.model))
+        if model_value:
+            lines.append(self._export("CLAUDE_CODE_SUBAGENT_MODEL", model_value))
 
         return "\n".join(lines)
 
@@ -148,6 +164,7 @@ class ShellExportGenerator:
             return f"# Unknown provider: {provider_name}", False
 
         provider, canonical_name = result
+        overrides = self._build_model_overrides()
 
         # Handle region-aware providers
         if provider.regions:
@@ -156,15 +173,12 @@ class ShellExportGenerator:
             except ValueError as e:
                 return f"# {e}", False
 
-            # Check API key
             if not self.config.is_set(provider.auth_token_var or ""):
                 return f"# Please configure {provider.auth_token_var}", False
 
             base_url = provider.get_base_url(region)
             model_env = provider.get_model_env(region)
             model_default = provider.get_model_default(region)
-
-            # Get model from config or use default
             model = self.config.get(model_env or "") or model_default
 
             return self.generate_exports(ExportConfig(
@@ -174,6 +188,7 @@ class ShellExportGenerator:
                 sonnet_model=model,
                 opus_model=model,
                 haiku_model=model,
+                **overrides,
             )), True
 
         # Handle variant providers (like seed)
@@ -194,24 +209,24 @@ class ShellExportGenerator:
                 sonnet_model=model,
                 opus_model=model,
                 haiku_model=model,
+                **overrides,
             )), True
 
         # Standard provider
         if not self.config.is_set(provider.auth_token_var or ""):
             # Special case: Claude can work without API key (Pro subscription)
             if canonical_name == "claude":
-                model = self.config.get("CLAUDE_MODEL") or provider.model_default or "claude-sonnet-4-5-20250929"
-                opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
-                haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
+                model = provider.model_default or "claude-sonnet-4-5-20250929"
 
                 return self.generate_exports(ExportConfig(
                     base_url=provider.base_url,
-                    auth_token_var=provider.auth_token_var,  # Will be set if available
+                    auth_token_var=provider.auth_token_var,
                     model=model,
                     sonnet_model=model,
-                    opus_model=opus_model,
-                    haiku_model=haiku_model,
+                    opus_model=model,
+                    haiku_model=model,
                     unset_api_key=True,
+                    **overrides,
                 )), True
 
             return f"# Please configure {provider.auth_token_var}", False
@@ -219,15 +234,6 @@ class ShellExportGenerator:
         model = self.config.get(provider.model_env or "") or provider.model_default
         if not model:
             return f"# No model configured for {provider_name}", False
-
-        # For Claude, also get opus and haiku models
-        sonnet_model = model
-        opus_model = model
-        haiku_model = model
-
-        if canonical_name == "claude":
-            opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
-            haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
 
         # Handle seed provider without variant
         if canonical_name == "seed" and not variant:
@@ -237,9 +243,10 @@ class ShellExportGenerator:
             base_url=provider.base_url,
             auth_token_var=provider.auth_token_var,
             model=model,
-            sonnet_model=sonnet_model,
-            opus_model=opus_model,
-            haiku_model=haiku_model,
+            sonnet_model=model,
+            opus_model=model,
+            haiku_model=model,
+            **overrides,
         )), True
 
     def get_env_for_provider(
@@ -255,6 +262,7 @@ class ShellExportGenerator:
             return {"error": f"Unknown provider: {provider_name}"}, False
 
         provider, canonical_name = result
+        overrides = self._build_model_overrides()
         env: dict[str, str] = {}
 
         # Handle region-aware providers
@@ -264,11 +272,9 @@ class ShellExportGenerator:
             except ValueError as e:
                 return {"error": str(e)}, False
 
-            # Check API key
             if not self.config.is_set(provider.auth_token_var or ""):
                 return {"error": f"Please configure {provider.auth_token_var}"}, False
 
-            # Get the actual API key value
             auth_token = self.config.get(provider.auth_token_var or "")
             if not auth_token:
                 return {"error": f"Please configure {provider.auth_token_var}"}, False
@@ -278,13 +284,14 @@ class ShellExportGenerator:
             model_default = provider.get_model_default(region)
             model = self.config.get(model_env or "") or model_default
 
+            model_value = overrides.get("override_model") or model
             env["ANTHROPIC_BASE_URL"] = base_url
             env["ANTHROPIC_AUTH_TOKEN"] = auth_token
-            env["ANTHROPIC_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = model
-            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+            env["ANTHROPIC_MODEL"] = model_value
+            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model_value
+            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = overrides.get("override_opus") or model
+            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = overrides.get("override_haiku") or model
+            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model_value
 
             return env, True
 
@@ -302,31 +309,29 @@ class ShellExportGenerator:
                 return {"error": f"Please configure {provider.auth_token_var}"}, False
 
             model = provider.variants[variant_lower]
+            model_value = overrides.get("override_model") or model
 
             env["ANTHROPIC_BASE_URL"] = provider.base_url
             env["ANTHROPIC_AUTH_TOKEN"] = auth_token
-            env["ANTHROPIC_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = model
-            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = model
-            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+            env["ANTHROPIC_MODEL"] = model_value
+            env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model_value
+            env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = overrides.get("override_opus") or model
+            env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = overrides.get("override_haiku") or model
+            env["CLAUDE_CODE_SUBAGENT_MODEL"] = model_value
 
             return env, True
 
         # Standard provider
         if not self.config.is_set(provider.auth_token_var or ""):
-            # Special case: Claude can work without API key (Pro subscription)
             if canonical_name == "claude":
-                model = self.config.get("CLAUDE_MODEL") or provider.model_default or "claude-sonnet-4-5-20250929"
-                opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
-                haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
+                model = provider.model_default or "claude-sonnet-4-5-20250929"
+                model_value = overrides.get("override_model") or model
 
-                env["ANTHROPIC_MODEL"] = model
-                env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model
-                env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opus_model
-                env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haiku_model
-                env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
-                # Unset API key for official Claude
+                env["ANTHROPIC_MODEL"] = model_value
+                env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model_value
+                env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = overrides.get("override_opus") or model
+                env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = overrides.get("override_haiku") or model
+                env["CLAUDE_CODE_SUBAGENT_MODEL"] = model_value
                 env["__unset__"] = "ANTHROPIC_API_URL,ANTHROPIC_API_KEY"
 
                 return env, True
@@ -341,28 +346,20 @@ class ShellExportGenerator:
         if not model:
             return {"error": f"No model configured for {provider_name}"}, False
 
-        # For Claude, also get opus and haiku models
-        sonnet_model = model
-        opus_model = model
-        haiku_model = model
-
-        if canonical_name == "claude":
-            opus_model = self.config.get("OPUS_MODEL") or "claude-opus-4-6"
-            haiku_model = self.config.get("HAIKU_MODEL") or "claude-haiku-4-5-20251001"
-
-        # Handle seed provider without variant
         if canonical_name == "seed" and not variant:
             model = self.config.get("SEED_MODEL") or provider.model_default or "ark-code-latest"
+
+        model_value = overrides.get("override_model") or model
 
         if provider.base_url:
             env["ANTHROPIC_BASE_URL"] = provider.base_url
         if auth_token:
             env["ANTHROPIC_AUTH_TOKEN"] = auth_token
-        env["ANTHROPIC_MODEL"] = model
-        env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = sonnet_model
-        env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = opus_model
-        env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = haiku_model
-        env["CLAUDE_CODE_SUBAGENT_MODEL"] = model
+        env["ANTHROPIC_MODEL"] = model_value
+        env["ANTHROPIC_DEFAULT_SONNET_MODEL"] = model_value
+        env["ANTHROPIC_DEFAULT_OPUS_MODEL"] = overrides.get("override_opus") or model
+        env["ANTHROPIC_DEFAULT_HAIKU_MODEL"] = overrides.get("override_haiku") or model
+        env["CLAUDE_CODE_SUBAGENT_MODEL"] = model_value
 
         return env, True
 
@@ -380,21 +377,17 @@ class ShellExportGenerator:
             return "# Please configure OPENROUTER_API_KEY", False
 
         model = provider_config["model"]
+        overrides = self._build_model_overrides()
 
-        lines = [
-            self._unset_all(),
-            self._export("ANTHROPIC_BASE_URL", "https://openrouter.ai/api"),
-            self._config_source(),
-            self._export_var("ANTHROPIC_AUTH_TOKEN", "OPENROUTER_API_KEY"),
-            self._unset("ANTHROPIC_API_KEY"),  # Avoid conflicts
-            self._export("ANTHROPIC_MODEL", model),
-            self._export("ANTHROPIC_DEFAULT_SONNET_MODEL", model),
-            self._export("ANTHROPIC_DEFAULT_OPUS_MODEL", model),
-            self._export("ANTHROPIC_DEFAULT_HAIKU_MODEL", model),
-            self._export("CLAUDE_CODE_SUBAGENT_MODEL", model),
-        ]
-
-        return "\n".join(lines), True
+        return self.generate_exports(ExportConfig(
+            base_url="https://openrouter.ai/api",
+            auth_token_var="OPENROUTER_API_KEY",
+            model=model,
+            sonnet_model=model,
+            opus_model=model,
+            haiku_model=model,
+            **overrides,
+        )), True
 
     def get_env_for_openrouter(self, provider_name: str) -> tuple[dict[str, str], bool]:
         """Get resolved environment variables for OpenRouter provider.
@@ -414,16 +407,18 @@ class ShellExportGenerator:
             return {"error": "Please configure OPENROUTER_API_KEY"}, False
 
         model = provider_config["model"]
+        overrides = self._build_model_overrides()
+        model_value = overrides.get("override_model") or model
 
         env = {
             "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
             "ANTHROPIC_AUTH_TOKEN": auth_token,
-            "ANTHROPIC_MODEL": model,
-            "ANTHROPIC_DEFAULT_SONNET_MODEL": model,
-            "ANTHROPIC_DEFAULT_OPUS_MODEL": model,
-            "ANTHROPIC_DEFAULT_HAIKU_MODEL": model,
-            "CLAUDE_CODE_SUBAGENT_MODEL": model,
-            "__unset__": "ANTHROPIC_API_KEY",  # Avoid conflicts
+            "ANTHROPIC_MODEL": model_value,
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": model_value,
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": overrides.get("override_opus") or model,
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL": overrides.get("override_haiku") or model,
+            "CLAUDE_CODE_SUBAGENT_MODEL": model_value,
+            "__unset__": "ANTHROPIC_API_KEY",
         }
 
         return env, True
