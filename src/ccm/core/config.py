@@ -62,6 +62,9 @@ PLACEHOLDER_PATTERNS = [
     re.compile(r"your-.*-api-key", re.IGNORECASE),
     re.compile(r"your_.*_api_key", re.IGNORECASE),
     re.compile(r"sk-your-.*", re.IGNORECASE),
+    re.compile(r"your-.*-model", re.IGNORECASE),
+    re.compile(r"your_.*_model", re.IGNORECASE),
+    re.compile(r"your.?_?model", re.IGNORECASE),
 ]
 
 

@@ -38,6 +38,19 @@ class TestIsEffectivelySet:
         assert is_effectively_set("YOUR_API_KEY") is False
         assert is_effectively_set("your-glm-api-key") is False
 
+    def test_model_placeholder_patterns(self) -> None:
+        """Model placeholder patterns should not be effectively set."""
+        assert is_effectively_set("your-sonnet-model") is False
+        assert is_effectively_set("your-opus-model") is False
+        assert is_effectively_set("your-haiku-model") is False
+        assert is_effectively_set("YOUR_MODEL") is False
+
+    def test_real_model_value(self) -> None:
+        """Real model values should be effectively set."""
+        assert is_effectively_set("glm-5-turbo") is True
+        assert is_effectively_set("deepseek-chat") is True
+        assert is_effectively_set("claude-opus-4-6") is True
+
 
 class TestParseConfigFile:
     """Tests for parse_config_file function."""
